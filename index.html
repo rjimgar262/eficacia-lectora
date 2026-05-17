@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Eficacia Lectora</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
+        .tabs { display: flex; justify-content: space-around; margin-bottom: 30px; border-bottom: 2px solid #ddd; }
+        .tab-btn { padding: 10px 20px; font-size: 1.1rem; cursor: pointer; border: none; background: none; font-weight: bold; color: #7f8c8d; }
+        .tab-btn.active { color: #3498db; border-bottom: 3px solid #3498db; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        textarea { height: 120px; resize: vertical; }
+        .texto-lectura { font-size: 1.4rem; line-height: 2.2rem; background: #eef2f3; padding: 20px; border-radius: 8px; border-left: 5px solid #3498db; margin-bottom: 20px; display: none; }
+        button.btn-principal { display: block; width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #2ecc71; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+        button.btn-detener { display: block; width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; color: white; background-color: #e74c3c; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; }
+        button.btn-secundario { display: block; width: 100%; padding: 12px; font-size: 1rem; font-weight: bold; color: white; background-color: #3498db; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 15px; }
+        button:disabled { background-color: #95a5a6 !important; cursor: not-allowed; }
+        .resultado { margin-top: 25px; padding: 15px; background: #e8f8f5; border-radius: 8px; display: none; border: 1px solid #2ecc71; }
+        .alerta-exito { padding: 15px; background-color: #d4edda; color: #155724; border-radius: 6px; margin-top: 15px; display: none; }
+        .info-actividad { background: #eaf2f8; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: none; font-weight: bold; color: #2980b9; }
+        .lista-locales { background: #fcfcfc; padding: 10px; border: 1px dashed #ccc; border-radius: 6px; margin-top: 15px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 Plataforma de Eficacia Lectora</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="cambiarPestaña('profesor')">Panel del Profesorado 👩‍🏫</button>
+        <button class="tab-btn" onclick="cambiarPestaña('alumno')">Zona del Alumnado 🧒</button>
+    </div>
+
+    <div id="pantalla-profesor" class="tab-content active">
+        <h3>Crear / Ver Actividades de Lectura</h3>
+        <div class="form-group">
+            <label for="prof-codigo">Código de la Actividad:</label>
+            <input type="text" id="prof-codigo" placeholder="Ej: LEC01">
+        </div>
+        <div class="form-group">
+            <label for="prof-curso">Curso:</label>
+            <select id="prof-curso">
+                <option value="1º Primaria">1º Primaria</option>
+                <option value="2º Primaria">2º Primaria</option>
+                <option value="3º Primaria">3º Primaria</option>
+                <option value="4º Primaria">4º Primaria</option>
+                <option value="5º Primaria">5º Primaria</option>
+                <option value="6º Primaria">6º Primaria</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="prof-idioma">Idioma:</label>
+            <select id="prof-idioma">
+                <option value="es-ES">Castellano (Español)</option>
+                <option value="en-US">Inglés (English)</option>
+                <option value="fr-FR">Francés (Français)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="prof-texto">Texto:</label>
+            <textarea id="prof-texto" placeholder="Escribe el fragmento aquí..."></textarea>
+        </div>
+        <button class="btn-principal" id="btnGuardarActividad" onclick="guardarActividadProfe()">Añadir Actividad al Sistema 🚀</button>
+        <div class="alerta-exito" id="alerta-profe">✅ Actividad añadida y lista para usar.</div>
+        
+        <div class="lista-locales">
+            <strong>Códigos creados:</strong> <span id="listaCodigosVisual">Ninguno</span>
+        </div>
+    </div>
+
+    <div id="pantalla-alumno" class="tab-content">
+        <h3>Realizar una lectura</h3>
+        
+        <div id="bloque-acceso">
+            <div class="form-group">
+                <label for="al-codigo">Código de la Actividad:</label>
+                <input type="text" id="al-codigo" placeholder="Ej: LEC01">
+            </div>
+            <div class="form-group">
+                <label for="al-nombre">Tu nombre completo:</label>
+                <input type="text" id="al-nombre" placeholder="Escribe tu nombre y apellidos">
+            </div>
+            <button class="btn-secundario" id="btnCargarActividad" onclick="cargarActividadAlumno()">Cargar Lectura 📋</button>
+        </div>
+
+        <div class="info-actividad" id="infoActividad"></div>
+        <div class="texto-lectura" id="textoOriginal"></div>
+        
+        <button class="btn-principal" id="btnIniciarAlumno" style="display:none;">Comenzar Lectura 🎙️</button>
+        <button class="btn-detener" id="btnDetenerAlumno" onclick="detenerLecturaManual()">Terminar Lectura 🟥</button>
+
+        <div class="resultado" id="seccionResultados">
+            <h3>📊 Resultados enviados a la maestra:</h3>
+            <p>⏱️ **Tiempo:** <span id="resTiempo">0</span> segundos</p>
+            <p>📈 **PCPM:** <span id="resPCPM">0</span> palabras/minuto</p>
+            <p>🎯 **Precisión:** <span id="resPrecision">0</span>%</p>
+            <p>❌ **Palabras a mejorar:** <span id="resErrores">Ninguna</span></p>
+        </div>
+    </div>
+</div>
+
+<script>
+// ⚠️ PEGA AQUÍ TU ENLACE LARGO DE GOOGLE APPS SCRIPT
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzPC5KgYQrpwlKaRtaJmWxhUNgE4DcaaPNr_sbXQzUP84E6i3kpT8MeU0KBx7Sq8ImfSA/exec"; 
+
+let baseDatosLecturas = {
+    "lec01": { curso: "3º Primaria", idioma: "es-ES", texto: "El gato negro duerme en el tejado de la casa grande." }
+};
+
+let idiomaConfigurado = "es-ES";
+let cursoConfigurado = "";
+let codigoConfigurado = "";
+let textoAcumuladoAlumno = "";
+
+if(localStorage.getItem('lecturasProfesa')) {
+    baseDatosLecturas = JSON.parse(localStorage.getItem('lecturasProfesa'));
+}
+
+function actualizarListaCodigos() {
+    document.getElementById('listaCodigosVisual').innerText = Object.keys(baseDatosLecturas).join(', ').toUpperCase();
+}
+actualizarListaCodigos();
+
+function cambiarPestaña(tipo) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    if(tipo === 'profesor') {
+        document.querySelector('[onclick="cambiarPestaña(\'profesor\')"]').classList.add('active');
+        document.getElementById('pantalla-profesor').classList.add('active');
+        actualizarListaCodigos();
+    } else {
+        document.querySelector('[onclick="cambiarPestaña(\'alumno\')"]').classList.add('active');
+        document.getElementById('pantalla-alumno').classList.add('active');
+    }
+}
+
+function guardarActividadProfe() {
+    const codigo = document.getElementById('prof-codigo').value.trim().toLowerCase();
+    const curso = document.getElementById('prof-curso').value;
+    const idioma = document.getElementById('prof-idioma').value;
+    const texto = document.getElementById('prof-texto').value.trim();
+    if(!codigo || !texto) { alert("Rellena el código y el texto."); return; }
+    baseDatosLecturas[codigo] = { curso: curso, idioma: idioma, texto: texto };
+    localStorage.setItem('lecturasProfesa', JSON.stringify(baseDatosLecturas));
+    document.getElementById('alerta-profe').style.display = "block";
+    actualizarListaCodigos();
+    setTimeout(() => { document.getElementById('alerta-profe').style.display = "none"; }, 3000);
+}
+
+function cargarActividadAlumno() {
+    const codigo = document.getElementById('al-codigo').value.trim().toLowerCase();
+    const nombre = document.getElementById('al-nombre').value.trim();
+    if(!codigo || !nombre) { alert("Escribe el código y tu nombre."); return; }
+    const actividad = baseDatosLecturas[codigo];
+    if(actividad) {
+        codigoConfigurado = codigo;
+        cursoConfigurado = actividad.curso;
+        idiomaConfigurado = actividad.idioma; 
+        document.getElementById('textoOriginal').innerText = actividad.texto;
+        document.getElementById('infoActividad').innerText = "📖 Lectura: " + actividad.curso;
+        document.getElementById('bloque-acceso').style.display = "none";
+        document.getElementById('infoActividad').style.display = "block";
+        document.getElementById('textoOriginal').style.display = "block";
+        document.getElementById('btnIniciarAlumno').style.display = "block";
+    } else {
+        alert("❌ Código no encontrado.");
+    }
+}
+
+// --- CONFIGURACIÓN CONTROLADA DEL MICRÓFONO ---
+let tiempoInicio, tiempoFin;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.continuous = true; // No para automáticamente en pausas cortas
+recognition.interimResults = false;
+
+document.getElementById('btnIniciarAlumno').addEventListener('click', () => {
+    recognition.lang = idiomaConfigurado; 
+    textoAcumuladoAlumno = ""; // Reiniciamos la papelera de palabras
+    tiempoInicio = new Date();
+    recognition.start();
+    
+    document.getElementById('btnIniciarAlumno').style.display = "none";
+    document.getElementById('btnDetenerAlumno').style.display = "block";
+});
+
+// Va guardando todo lo que el alumno dice sin cortar el proceso
+recognition.onresult = (event) => {
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+            textoAcumuladoAlumno += event.results[i][0].transcript + " ";
+        }
+    }
+};
+
+// La lectura SOLO termina cuando el alumno pulsa el botón rojo
+function detenerLecturaManual() {
+    tiempoFin = new Date();
+    recognition.stop();
+    document.getElementById('btnDetenerAlumno').style.display = "none";
+    
+    // Esperamos un milisegundo a que se cierre el micrófono y procesamos
+    setTimeout(() => {
+        procesarLecturaFinal(textoAcumuladoAlumno.trim().toLowerCase());
+    }, 400);
+}
+
+function procesarLecturaFinal(textoAlumno) {
+    const textoOriginal = document.getElementById('textoOriginal').innerText;
+    let palabrasOriginales = textoOriginal.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?]/g,"").split(/\s+/);
+    let palabrasAlumno = textoAlumno.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()¿?]/g,"").split(/\s+/);
+    
+    let tiempoSegundos = (tiempoFin - tiempoInicio) / 1000;
+    let palabrasCorrectas = 0;
+    let errores = [];
+
+    palabrasOriginales.forEach((palabra) => {
+        if (palabrasAlumno.includes(palabra)) { palabrasCorrectas++; } else { errores.push(palabra); }
+    });
+
+    let precisionPorcentaje = (palabrasCorrectas / palabrasOriginales.length) * 100;
+    let minutos = tiempoSegundos / 60;
+    let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutos) : 0;
+
+    document.getElementById('resTiempo').innerText = tiempoSegundos.toFixed(1);
+    document.getElementById('resPCPM').innerText = pcpm;
+    document.getElementById('resPrecision').innerText = precisionPorcentaje.toFixed(1);
+    document.getElementById('resErrores').innerText = errores.length > 0 ? errores.join(', ') : "Ninguno";
+    
+    document.getElementById('seccionResultados').style.display = "block";
+
+    fetch(URL_GOOGLE_SCRIPT, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            codigoActividad: codigoConfigurado.toUpperCase(),
+            curso: cursoConfigurado,
+            idioma: idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés"),
+            alumno: document.getElementById('al-nombre').value,
+            tiempo: tiempoSegundos.toFixed(1),
+            pcpm: pcpm,
+            precision: precisionPorcentaje.toFixed(1),
+            errores: errores.length > 0 ? errores.join(', ') : "Ninguno"
+        })
+    });
+}
+</script>
+</body>
+</html>
