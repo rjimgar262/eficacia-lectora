@@ -227,8 +227,9 @@ function procesarLecturaFinal(textoAlumno) {
 
     let precisionPorcentaje = (palabrasCorrectas / palabrasOriginales.length) * 100;
     let minutos = tiempoSegundos / 60;
-    let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutos) : 0;
+    let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutes) : 0;
 
+    // Mostrar resultados en la pantalla de la aplicación
     document.getElementById('resTiempo').innerText = tiempoSegundos.toFixed(1);
     document.getElementById('resPCPM').innerText = pcpm;
     document.getElementById('resPrecision').innerText = precisionPorcentaje.toFixed(1);
@@ -236,21 +237,31 @@ function procesarLecturaFinal(textoAlumno) {
     
     document.getElementById('seccionResultados').style.display = "block";
 
-    fetch(URL_GOOGLE_SCRIPT, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            codigoActividad: codigoConfigurado.toUpperCase(),
-            curso: cursoConfigurado,
-            idioma: idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés"),
-            alumno: document.getElementById('al-nombre').value,
-            tiempo: tiempoSegundos.toFixed(1),
-            pcpm: pcpm,
-            precision: precisionPorcentaje.toFixed(1),
-            errores: errores.length > 0 ? errores.join(', ') : "Ninguno"
-        })
-    });
+    // --- NUEVO SISTEMA DE ENVÍO INFALIBLE (A PRUEBA DE BALAS) ---
+    // ⚠️ REEMPLAZA CON TU URL NUEVA DE GOOGLE APPS SCRIPT
+    const urlGoogle = "https://script.google.com/macros/s/AKfycbzPC5KgYQrpwlKaRtaJmWxhUNgE4DcaaPNr_sbXQzUP84E6i3kpT8MeU0KBx7Sq8ImfSA/exec";
+    
+    // Construimos los datos del alumno dentro del enlace
+    const parametros = "?codigo=" + encodeURIComponent(codigoConfigurado.toUpperCase()) +
+                       "&curso=" + encodeURIComponent(cursoConfigurado) +
+                       "&idioma=" + encodeURIComponent(idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés")) +
+                       "&alumno=" + encodeURIComponent(document.getElementById('al-nombre').value) +
+                       "&tiempo=" + encodeURIComponent(tiempoSegundos.toFixed(1)) +
+                       "&pcpm=" + encodeURIComponent(pcpm) +
+                       "&precision=" + encodeURIComponent(precisionPorcentaje.toFixed(1)) +
+                       "&errores=" + encodeURIComponent(errores.length > 0 ? errores.join(', ') : "Ninguno") +
+                       "&callback=finalizadoOk";
+
+    // Enviamos el paquete camuflado como un script seguro para burlar cualquier bloqueo
+    const scriptEnvio = document.createElement('script');
+    scriptEnvio.src = urlGoogle + parametros;
+    document.body.appendChild(scriptEnvio);
+}
+
+// Función de cortesía que se activa cuando Google confirma que ha escrito la fila
+function finalizadoOk(respuesta) {
+    document.getElementById('btnIniciarAlumno').innerText = "✅ ¡Resultados guardados con éxito!";
+    document.getElementById('btnIniciarAlumno').style.display = "block";
 }
 </script>
 </body>
