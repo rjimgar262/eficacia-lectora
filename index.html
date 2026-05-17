@@ -227,7 +227,9 @@ function procesarLecturaFinal(textoAlumno) {
 
     let precisionPorcentaje = (palabrasCorrectas / palabrasOriginales.length) * 100;
     let minutos = tiempoSegundos / 60;
-    let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutes) : 0;
+    
+    // CORRECCIÓN AQUÍ: Cambiado 'minutes' por 'minutos' para evitar el bloqueo del navegador
+    let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutos) : 0; 
 
     // Mostrar resultados en la pantalla de la aplicación
     document.getElementById('resTiempo').innerText = tiempoSegundos.toFixed(1);
@@ -237,11 +239,10 @@ function procesarLecturaFinal(textoAlumno) {
     
     document.getElementById('seccionResultados').style.display = "block";
 
-    // --- NUEVO SISTEMA DE ENVÍO INFALIBLE (A PRUEBA DE BALAS) ---
-    // ⚠️ REEMPLAZA CON TU URL NUEVA DE GOOGLE APPS SCRIPT
-    const urlGoogle = "https://script.google.com/macros/s/AKfycbzPC5KgYQrpwlKaRtaJmWxhUNgE4DcaaPNr_sbXQzUP84E6i3kpT8MeU0KBx7Sq8ImfSA/exec";
+    // --- ENVIAR DATOS A GOOGLE ---
+    // ⚠️ Asegúrate de que aquí está tu URL de Google Apps Script que termina en /exec
+    const urlGoogle = "TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUÍ";
     
-    // Construimos los datos del alumno dentro del enlace
     const parametros = "?codigo=" + encodeURIComponent(codigoConfigurado.toUpperCase()) +
                        "&curso=" + encodeURIComponent(cursoConfigurado) +
                        "&idioma=" + encodeURIComponent(idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés")) +
@@ -252,14 +253,13 @@ function procesarLecturaFinal(textoAlumno) {
                        "&errores=" + encodeURIComponent(errores.length > 0 ? errores.join(', ') : "Ninguno") +
                        "&callback=finalizadoOk";
 
-    // Enviamos el paquete camuflado como un script seguro para burlar cualquier bloqueo
     const scriptEnvio = document.createElement('script');
     scriptEnvio.src = urlGoogle + parametros;
     document.body.appendChild(scriptEnvio);
 }
 
-// Función de cortesía que se activa cuando Google confirma que ha escrito la fila
 function finalizadoOk(respuesta) {
+    // Al guardarse con éxito, el botón verde cambiará para avisarte
     document.getElementById('btnIniciarAlumno').innerText = "✅ ¡Resultados guardados con éxito!";
     document.getElementById('btnIniciarAlumno').style.display = "block";
 }
