@@ -107,9 +107,6 @@
 </div>
 
 <script>
-// ⚠️ PEGA AQUÍ TU ENLACE LARGO DE GOOGLE APPS SCRIPT
-const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzPC5KgYQrpwlKaRtaJmWxhUNgE4DcaaPNr_sbXQzUP84E6i3kpT8MeU0KBx7Sq8ImfSA/exec"; 
-
 let baseDatosLecturas = {
     "lec01": { curso: "3º Primaria", idioma: "es-ES", texto: "El gato negro duerme en el tejado de la casa grande." }
 };
@@ -178,12 +175,12 @@ function cargarActividadAlumno() {
 let tiempoInicio, tiempoFin;
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
-recognition.continuous = true; // No para automáticamente en pausas cortas
+recognition.continuous = true; 
 recognition.interimResults = false;
 
 document.getElementById('btnIniciarAlumno').addEventListener('click', () => {
     recognition.lang = idiomaConfigurado; 
-    textoAcumuladoAlumno = ""; // Reiniciamos la papelera de palabras
+    textoAcumuladoAlumno = ""; 
     tiempoInicio = new Date();
     recognition.start();
     
@@ -191,7 +188,6 @@ document.getElementById('btnIniciarAlumno').addEventListener('click', () => {
     document.getElementById('btnDetenerAlumno').style.display = "block";
 });
 
-// Va guardando todo lo que el alumno dice sin cortar el proceso
 recognition.onresult = (event) => {
     for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
@@ -200,13 +196,11 @@ recognition.onresult = (event) => {
     }
 };
 
-// La lectura SOLO termina cuando el alumno pulsa el botón rojo
 function detenerLecturaManual() {
     tiempoFin = new Date();
     recognition.stop();
     document.getElementById('btnDetenerAlumno').style.display = "none";
     
-    // Esperamos un milisegundo a que se cierre el micrófono y procesamos
     setTimeout(() => {
         procesarLecturaFinal(textoAcumuladoAlumno.trim().toLowerCase());
     }, 400);
@@ -227,41 +221,43 @@ function procesarLecturaFinal(textoAlumno) {
 
     let precisionPorcentaje = (palabrasCorrectas / palabrasOriginales.length) * 100;
     let minutos = tiempoSegundos / 60;
-    
-    // CORRECCIÓN AQUÍ: Cambiado 'minutes' por 'minutos' para evitar el bloqueo del navegador
     let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutos) : 0; 
 
-    // Mostrar resultados en la pantalla de la aplicación
+    // --- MOSTRAR RESULTADOS EN PANTALLA ---
     document.getElementById('resTiempo').innerText = tiempoSegundos.toFixed(1);
     document.getElementById('resPCPM').innerText = pcpm;
     document.getElementById('resPrecision').innerText = precisionPorcentaje.toFixed(1);
     document.getElementById('resErrores').innerText = errores.length > 0 ? errores.join(', ') : "Ninguno";
     
     document.getElementById('seccionResultados').style.display = "block";
-
-    // --- ENVIAR DATOS A GOOGLE ---
-    // ⚠️ Asegúrate de que aquí está tu URL de Google Apps Script que termina en /exec
-    const urlGoogle = "TU_URL_DE_GOOGLE_APPS_SCRIPT_AQUÍ";
-    
-    const parametros = "?codigo=" + encodeURIComponent(codigoConfigurado.toUpperCase()) +
-                       "&curso=" + encodeURIComponent(cursoConfigurado) +
-                       "&idioma=" + encodeURIComponent(idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés")) +
-                       "&alumno=" + encodeURIComponent(document.getElementById('al-nombre').value) +
-                       "&tiempo=" + encodeURIComponent(tiempoSegundos.toFixed(1)) +
-                       "&pcpm=" + encodeURIComponent(pcpm) +
-                       "&precision=" + encodeURIComponent(precisionPorcentaje.toFixed(1)) +
-                       "&errores=" + encodeURIComponent(errores.length > 0 ? errores.join(', ') : "Ninguno") +
-                       "&callback=finalizadoOk";
-
-    const scriptEnvio = document.createElement('script');
-    scriptEnvio.src = urlGoogle + parametros;
-    document.body.appendChild(scriptEnvio);
-}
-
-function finalizadoOk(respuesta) {
-    // Al guardarse con éxito, el botón verde cambiará para avisarte
-    document.getElementById('btnIniciarAlumno').innerText = "✅ ¡Resultados guardados con éxito!";
+    document.getElementById('btnIniciarAlumno').innerText = "Enviando resultados...";
     document.getElementById('btnIniciarAlumno').style.display = "block";
+
+    // --- ENVÍO AUTOMÁTICO A GOOGLE FORMS CORPORATIVO ---
+    const URL_FORMULARIO_JUNTA = "https://docs.google.com/forms/d/e/1FAIpQLSc1wCDbSpTjWxkQulpNgXMSwrHmcJJBfTVMeXPyvWd0LJzEmg/formResponse"; 
+
+    const datosForm = new FormData();
+    datosForm.append('entry.1363173085', codigoConfigurado.toUpperCase()); 
+    datosForm.append('entry.330456458', cursoConfigurado);               
+    datosForm.append('entry.113370702', idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés")); 
+    datosForm.append('entry.1389823751', document.getElementById('al-nombre').value); 
+    datosForm.append('entry.1375713161', tiempoSegundos.toFixed(1));       
+    datosForm.append('entry.1632563734', pcpm);                           
+    datosForm.append('entry.1800700626', precisionPorcentaje.toFixed(1) + "%"); 
+    datosForm.append('entry.1737738064', errores.length > 0 ? errores.join(', ') : "Ninguno"); 
+
+    fetch(URL_FORMULARIO_JUNTA, {
+        method: 'POST',
+        mode: 'no-cors', 
+        body: datosForm
+    })
+    .then(() => {
+        document.getElementById('btnIniciarAlumno').innerText = "✅ Lectura Guardada en tu Excel";
+    })
+    .catch((error) => {
+        console.error("Error al enviar:", error);
+        document.getElementById('btnIniciarAlumno').innerText = "❌ Error al guardar";
+    });
 }
 </script>
 </body>
