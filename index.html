@@ -26,6 +26,7 @@
         .alerta-exito { padding: 15px; background-color: #d4edda; color: #155724; border-radius: 6px; margin-top: 15px; display: none; }
         .info-actividad { background: #eaf2f8; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: none; font-weight: bold; color: #2980b9; }
         .lista-locales { background: #fcfcfc; padding: 10px; border: 1px dashed #ccc; border-radius: 6px; margin-top: 15px; font-size: 0.9rem; }
+        .btn-enviar-manual { display: block; width: 100%; padding: 15px; font-size: 1.3rem; font-weight: bold; color: white; background-color: #e67e22; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; text-align: center; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -97,11 +98,13 @@
         <button class="btn-detener" id="btnDetenerAlumno" onclick="detenerLecturaManual()">Terminar Lectura 🟥</button>
 
         <div class="resultado" id="seccionResultados">
-            <h3>📊 Resultados enviados a la maestra:</h3>
+            <h3>📊 Tus Resultados:</h3>
             <p>⏱️ **Tiempo:** <span id="resTiempo">0</span> segundos</p>
             <p>📈 **PCPM:** <span id="resPCPM">0</span> palabras/minuto</p>
             <p>🎯 **Precisión:** <span id="resPrecision">0</span>%</p>
             <p>❌ **Palabras a mejorar:** <span id="resErrores">Ninguna</span></p>
+            
+            <a id="enlaceManualForms" target="_blank" class="btn-enviar-manual">📝 GUARDAR MIS RESULTADOS EN EL EXCEL</a>
         </div>
     </div>
 </div>
@@ -171,7 +174,7 @@ function cargarActividadAlumno() {
     }
 }
 
-// --- CONFIGURACIÓN CONTROLADA DEL MICRÓFONO ---
+// --- CONFIGURACIÓN DEL MICRÓFONO ---
 let tiempoInicio, tiempoFin;
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const recognition = new SpeechRecognition();
@@ -223,41 +226,33 @@ function procesarLecturaFinal(textoAlumno) {
     let minutos = tiempoSegundos / 60;
     let pcpm = minutos > 0 ? Math.round(palabrasCorrectas / minutos) : 0; 
 
-    // --- MOSTRAR RESULTADOS EN PANTALLA ---
+    // MOSTRAR RESULTADOS EN PANTALLA
     document.getElementById('resTiempo').innerText = tiempoSegundos.toFixed(1);
     document.getElementById('resPCPM').innerText = pcpm;
     document.getElementById('resPrecision').innerText = precisionPorcentaje.toFixed(1);
     document.getElementById('resErrores').innerText = errores.length > 0 ? errores.join(', ') : "Ninguno";
     
     document.getElementById('seccionResultados').style.display = "block";
-    document.getElementById('btnIniciarAlumno').innerText = "Enviando resultados...";
-    document.getElementById('btnIniciarAlumno').style.display = "block";
 
-    // --- ENVÍO AUTOMÁTICO A GOOGLE FORMS CORPORATIVO ---
-    const URL_FORMULARIO_JUNTA = "https://docs.google.com/forms/d/e/1FAIpQLSc1wCDbSpTjWxkQulpNgXMSwrHmcJJBfTVMeXPyvWd0LJzEmg/formResponse"; 
+    // --- CONSTRUCCIÓN DEL ENLACE SEGURO QUE ABRE EL FORMULARIO RELLENADO ---
+    const idiomaTexto = idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés");
+    const nombreAlumno = document.getElementById('al-nombre').value;
+    const listaErrores = errores.length > 0 ? errores.join(', ') : "Ninguno";
 
-    const datosForm = new FormData();
-    datosForm.append('entry.1363173085', codigoConfigurado.toUpperCase()); 
-    datosForm.append('entry.330456458', cursoConfigurado);               
-    datosForm.append('entry.113370702', idiomaConfigurado === "es-ES" ? "Castellano" : (idiomaConfigurado === "en-US" ? "Inglés" : "Francés")); 
-    datosForm.append('entry.1389823751', document.getElementById('al-nombre').value); 
-    datosForm.append('entry.1375713161', tiempoSegundos.toFixed(1));       
-    datosForm.append('entry.1632563734', pcpm);                           
-    datosForm.append('entry.1800700626', precisionPorcentaje.toFixed(1) + "%"); 
-    datosForm.append('entry.1737738064', errores.length > 0 ? errores.join(', ') : "Ninguno"); 
+    const urlBaseForm = "https://docs.google.com/forms/d/e/1FAIpQLSc1wCDbSpTjWxkQulpNgXMSwrHmcJJBfTVMeXPyvWd0LJzEmg/viewform";
+    
+    const enlaceConDatos = urlBaseForm + "?usp=pp_url" +
+        "&entry.1363173085=" + encodeURIComponent(codigoConfigurado.toUpperCase()) +
+        "&entry.330456458=" + encodeURIComponent(cursoConfigurado) +
+        "&entry.113370702=" + encodeURIComponent(idiomaTexto) +
+        "&entry.1389823751=" + encodeURIComponent(nombreAlumno) +
+        "&entry.1375713161=" + encodeURIComponent(tiempoSegundos.toFixed(1)) +
+        "&entry.1632563734=" + encodeURIComponent(pcpm) +
+        "&entry.1800700626=" + encodeURIComponent(precisionPorcentaje.toFixed(1) + "%") +
+        "&entry.1737738064=" + encodeURIComponent(listaErrores);
 
-    fetch(URL_FORMULARIO_JUNTA, {
-        method: 'POST',
-        mode: 'no-cors', 
-        body: datosForm
-    })
-    .then(() => {
-        document.getElementById('btnIniciarAlumno').innerText = "✅ Lectura Guardada en tu Excel";
-    })
-    .catch((error) => {
-        console.error("Error al enviar:", error);
-        document.getElementById('btnIniciarAlumno').innerText = "❌ Error al guardar";
-    });
+    // Asignamos esta URL al gran botón naranja
+    document.getElementById('enlaceManualForms').href = enlaceConDatos;
 }
 </script>
 </body>
